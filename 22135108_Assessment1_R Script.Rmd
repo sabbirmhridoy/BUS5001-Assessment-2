@@ -1,0 +1,828 @@
+```{r}
+#Part B
+#1a
+# Load necessary library
+library(readr)
+
+# Load the dataset from the given path
+data <- read_csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Display the structure of the dataset to inspect variable types
+str(data)
+```
+
+```{r}
+library(readr)
+
+# Load the dataset from the given path
+data <- read_csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Print column names to find the correct one
+print(colnames(data))
+
+```
+```{r}
+#1b
+#I. One-Hot Encoding:  One-hot encoding is the process of converting categorical data into a format that machine learning algorithms may use to improve prediction accuracy. It generates additional columns that indicate the existence of all potential values from the original column. Each category is assigned a new binary column (1 for present and 0 for absent).
+
+#II. Label Encoding: Label encoding is a basic categorical data conversion that assigns a numerical ID range from 0 to N (where N is the number of categories less than one). It is particularly handy with ordinal data.
+
+#III. Binary Encoding  Binary encoding turns a category into binary digits. Each binary number represents one feature column. If there are n distinct categories, binary encoding produces the fewest amount of features compared to one-hot encoding.
+
+```
+
+```{r}
+#1ci
+#One-Hot encoding
+library(dplyr)
+library(tidyr)
+
+# Load the dataset
+data <- read_csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# One-hot encoding the 'DwellClass' column
+data_transformed <- data %>%
+  mutate(DwellClass = as.factor(DwellClass)) %>%
+  pivot_wider(names_from = DwellClass, values_from = DwellClass,
+              values_fill = list(DwellClass = 0), values_fn = list(DwellClass = length)) %>%
+  mutate(across(.cols = starts_with("DwellClass"), .fns = ~as.integer(. > 0)))
+
+# View the transformed data
+head(data_transformed)
+
+```
+```{r}
+#1cii
+#Label encoding
+library(dplyr)
+library(readr)
+
+# Load the dataset
+data <- read_csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Applying label encoding
+data <- data %>%
+  mutate(DwellClass = as.factor(DwellClass),  # Ensure it's a factor if not already
+         DwellClass_encoded = as.integer(DwellClass))  # Convert factor levels to integers
+
+# View the changes
+head(data)
+
+
+```
+
+```{r}
+#2a(i)
+#1. Calculating Summary Statistics for Continuous Variables
+
+#For continuous variables like LotArea, YearBuilt, LivingArea, etc., we will calculate mean, median, max, and standard deviation.
+
+library(dplyr)
+library(readr)
+
+# Load the dataset
+data <- read_csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Selecting continuous variables for statistics
+continuous_vars <- data %>%
+  select(LotArea, YearBuilt, LivingArea, TotalBSF, LowQualFinSF, GarageCars, PoolArea, OpenPorchSF, SalePrice) %>%
+  summarise_all(list(
+    mean = ~mean(.x, na.rm = TRUE),
+    median = ~median(.x, na.rm = TRUE),
+    max = ~max(.x, na.rm = TRUE),
+    sd = ~sd(.x, na.rm = TRUE)
+  ))
+
+# View the results
+View(continuous_vars)
+print(continuous_vars)
+
+```
+```{r}
+#2a (ii)
+#Count for Each Categorical Variable
+
+#For categorical variables like LotShape, LandContour, DwellClass, etc., we will calculate the count of each category:
+library(dplyr)
+library(readr)
+
+# Load the dataset
+data <- read_csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Counting categories in each categorical variable individually and storing results
+counts_LotShape <- data %>% count(LotShape)
+counts_LandContour <- data %>% count(LandContour)
+counts_Utilities <- data %>% count(Utilities)
+counts_DwellClass <- data %>% count(DwellClass)
+counts_GarageType <- data %>% count(GarageType)
+
+# Print counts to console (or use View() if in RStudio to inspect)
+print(counts_LotShape)
+print(counts_LandContour)
+print(counts_Utilities)
+print(counts_DwellClass)
+print(counts_GarageType)
+
+# Combining all counts into one list for easier viewing
+all_counts <- list(
+  LotShape = counts_LotShape,
+  LandContour = counts_LandContour,
+  Utilities = counts_Utilities,
+  DwellClass = counts_DwellClass,
+  GarageType = counts_GarageType
+)
+
+# Optionally, print or view the combined list
+print(all_counts)
+
+```
+
+```{r}
+#2b
+#Checking for Extreme Values
+
+#To identify extreme values, commonly known as outliers, By using box plots for continuous variables. Extreme values are typically those that fall far outside the interquartile range, often beyond 1.5 times the interquartile range from the quartiles.
+
+library(ggplot2)
+
+# Plotting box plots for continuous variables to identify extreme values
+continuous_var_names <- c("LotArea", "YearBuilt", "LivingArea", "TotalBSF", "LowQualFinSF", "GarageCars", "PoolArea", "OpenPorchSF", "SalePrice")
+
+for(var in continuous_var_names) {
+  p <- ggplot(data, aes_string(x = "factor(1)", y = var)) +
+    geom_boxplot() +
+    labs(title = paste("Boxplot of", var), y = var, x = "") +
+    theme_minimal()
+  print(p)
+}
+
+
+# Discussion of Extreme Values
+
+#Box Plots: The box plots generated will visually indicate the presence of outliers as points that lie outside the whiskers of the box plots.
+#nterpretation: For instance, LotArea might show extreme values if some properties have exceptionally large lots compared to others. Such values could be legitimate, representing large estate properties or errors in data entry.
+
+```
+
+```{r}
+#3
+# Load required package
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    install.packages("ggplot2")
+}
+library(ggplot2)
+
+# Load the dataset using base R's read.csv
+data <- read.csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")  # Update the path as necessary
+
+# Define continuous variables
+continuous_vars <- c("LotArea", "YearBuilt", "LivingArea", "TotalBSF", "SalePrice")
+
+# Initialize an empty list to store results for further analysis or saving
+results <- list()
+
+# Function to calculate skewness and kurtosis
+calculate_stats <- function(x) {
+    n <- length(x)
+    mean_x <- mean(x, na.rm = TRUE)
+    sd_x <- sd(x, na.rm = TRUE)
+    skewness <- sum((x - mean_x)^3 / sd_x^3, na.rm = TRUE) / n
+    kurtosis <- sum((x - mean_x)^4 / sd_x^4, na.rm = TRUE) / n - 3
+    return(c(Skewness = skewness, Kurtosis = kurtosis))
+}
+
+# Iterate through each variable to analyze
+for (var in continuous_vars) {
+    # Plot histogram
+    plot <- ggplot(data, aes_string(x = var)) +
+        geom_histogram(bins = 30, fill = "Orange", color = "black") +
+        labs(title = paste("Histogram of", var), x = var, y = "Frequency") +
+        theme_minimal()
+
+    # Print plot
+    print(plot)
+    
+    # Calculate and print summary statistics
+    stats <- data %>%
+        filter(!is.na(.data[[var]])) %>%
+        summarise(
+            Mean = mean(.data[[var]]),
+            Median = median(.data[[var]]),
+            SD = sd(.data[[var]]),
+            Min = min(.data[[var]]),
+            Max = max(.data[[var]]),
+            Skewness = calculate_stats(.data[[var]])['Skewness'],
+            Kurtosis = calculate_stats(.data[[var]])['Kurtosis']
+        )
+    print(stats)
+
+    # Store results in the list
+    results[[var]] <- list(Plot = plot, Statistics = stats)
+}
+
+#3a. The Largest Variability
+#LotArea has the biggest SD of the variables at around 10,000.46. This indicates that the LotArea has the most variability, implying the dataset has a wide variety of lot sizes. This variable has a wide range, with a few values reaching well beyond the core cluster, indicating high variability. Most homes have small lot sizes, while some have exceptionally enormous lot sizes, resulting in wide variation.
+
+#3b. Variables seem skewed
+#All variables exhibit skewness, primarily to the right. The YearBuilt histogram has a right skew, with more structures built in recent years and fewer from previous times. This indicates that older structures are less prevalent. The LotArea histogram is heavily biased to the right, with most lots being tiny and only a handful having much greater lot sizes. LivingArea exhibits right skewness, as most living spaces fall within a smaller range (about 1000-2000 sq ft), while a few houses have significantly greater living areas. These patterns indicate that newer properties and those with smaller lots and focusing spaces are more prevalent, but really large areas are unusual and cause the distribution's tail to point to the right.
+
+#3c. Any Value seems extreme
+#The information's significant skewness and high kurtosis, as well as the visual patterns in the histograms, all point to the presence of extreme values or outliers. The LotArea variable, with an extraordinarily high kurtosis of 201.5102, indicates a highly peaked distribution with substantial tails, indicating the existence of strong outliers. This is reinforced by the histogram, which displays values that stretch far into the top range, indicating some attributes with extremely wide lot areas. Similarly, the SalePrice variable has a kurtosis of 6.554843, indicating a peak distribution with probable outliers. This is typical in real estate pricing, when a few properties are priced significantly more than the average, resulting in outliers in the dataset.
+
+```
+```{r}
+#4a. Which, if any, of the variables have missing values?
+library(dplyr)
+
+# Load the dataset
+data <- read.csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")  # Update the path as necessary
+
+# Check for missing values
+missing_values <- sapply(data, function(x) sum(is.na(x)))
+missing_values <- missing_values[missing_values > 0]  # Filter only variables with missing values
+print(missing_values)
+
+```
+```{r}
+#4b. What are the methods of handling missing values?
+#There are several methods to handle missing data:
+
+#Deletion:
+#Listwise Deletion: Remove any rows with missing values.
+#Pairwise Deletion: Use available data while ignoring any missing data points, useful in correlation or regression without dropping entire cases.
+
+#Imputation:
+#Mean/Median/Mode Imputation: Replace missing values with the mean, median, or mode of the column.
+#Predictive Imputation: Use statistical models (like linear regression) to predict and fill missing values based on other variables.
+
+#Using Placeholder Values:
+#For categorical data, introduce a new category to denote missingness.
+#For numerical data, replace with a constant that does not interfere with data distribution, like 0 or -999.
+```
+```{r}
+#4c. Apply the 3 methods of missing values and demonstrate the output.
+#Method 1: Listwise Deletion
+# Applying listwise deletion
+data_listwise <- na.omit(data)
+
+# Summary statistics after listwise deletion
+summary_stats_listwise <- summary(data_listwise)
+print(summary_stats_listwise)
+View(summary_stats_listwise)
+
+#Method 2: Mean Imputation (for a numerical variable)
+# Assuming 'LotArea' has missing values and is numerical
+mean_LotArea <- mean(data$LotArea, na.rm = TRUE)
+data_mean_imputation <- data
+data_mean_imputation$LotArea[is.na(data_mean_imputation$LotArea)] <- mean_LotArea
+
+# Summary statistics after mean imputation
+summary_stats_mean <- summary(data_mean_imputation)
+print(summary_stats_mean)
+View(summary_stats_mean)
+
+#Method 3: Placeholder Values for Categorical Variable
+# Assuming 'BasementCondition' is categorical with missing values
+data$BasementCondition[is.na(data$BasementCondition)] <- "Missing"
+
+# Summary statistics after adding placeholder
+summary_stats_placeholder <- summary(data)
+print(summary_stats_placeholder)
+View(summary_stats_placeholder)
+
+#The most suitable approach for dealing with missing values in this data collection is, 
+
+#1. Listwise deletion: This might result in a considerable loss of data, possibly skewing any study if missingness is not random.
+
+#2. Mean Imputation: This preserves dataset size but reduces variability and influences correlations by artificially inflating the number of observations near the mean.
+
+#3. Categorical Variable Placeholder: This is useful for ensuring data integrity without presuming that missing values may be represented by existing categories. It avoids the difficulties of imputation while potentially introducing a new category that requires careful interpretation in predictive modeling.
+
+#The choice is based on the nature of the missingness and the need of maintaining all data for analysis. If the missing data are not MNAR (Missing Not At Random), imputation may be appropriate. However, if data quality and precise representation of missingness are critical, placeholders or more advanced imputation algorithms may be preferable.
+
+```
+```{r}
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    install.packages("ggplot2")
+}
+if (!requireNamespace("reshape2", quietly = TRUE)) {
+    install.packages("reshape2")
+}
+library(ggplot2)
+library(reshape2)
+```
+```{r}
+#5a
+# Load necessary packages, installing them if not already available
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    install.packages("ggplot2")
+}
+library(ggplot2)
+
+if (!requireNamespace("reshape2", quietly = TRUE)) {
+    install.packages("reshape2")
+}
+library(reshape2)
+
+# Load your data
+# Make sure to update the path to where your dataset is actually located
+data <- read.csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")  # Update the path as necessary
+
+# Selecting only numeric columns for correlation analysis
+numerical_data <- data[, sapply(data, is.numeric)]
+
+# Calculate the correlation matrix, handling missing values by using complete observations
+correlation_matrix <- cor(numerical_data, use = "complete.obs")
+
+# Reshape the correlation matrix for visualization
+melted_correlation_matrix <- melt(correlation_matrix)
+names(melted_correlation_matrix) <- c("Variable1", "Variable2", "Correlation")
+
+# Visualize the correlation matrix using ggplot2
+cor_plot <- ggplot(data = melted_correlation_matrix, aes(x = Variable1, y = Variable2, fill = Correlation)) +
+    geom_tile() +
+    scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                         midpoint = 0, limit = c(-1,1), space = "Lab", 
+                         name="Correlation") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+    labs(title = "Correlation Matrix", x = "", y = "")
+
+# Print the plot
+print(cor_plot)
+
+#The provided correlation matrix demonstrates the correlations between several property-related variables. The correlation matrix identifies several important correlations:
+#There are Strong positive correlations between garage cars and sales. Price:. Its a strong red block indicates a substantial positive association. This shows that residences with greater garage space tend to sell for more money. TotalRmsAbvGrd (Total Rooms Above Ground) and SalePrice show another substantial favorable link. More rooms normally signify larger residences, which sell for a higher price. Also, FullBath and SalePrice with a larger number of full bathrooms correlate with higher property values. There are negative correlations between OverallCondition and SalePrice. A lighter or bluish color indicates a modest negative connection, which might imply that properties in better condition do not always command higher prices, potentially owing to other offsetting considerations such as location or lot size. Also, there is a negative association between YearBuilt and OverallCondition, indicating that older properties are in lower overall condition. For the Weak or No. Correlation is the ID of the listing has a very low correlation with other factors, as predicted given that it is most likely a sequential number with no meaningful influence on property attributes or pricing. MoSold and SalePrice appear to have a very low connection, implying that the month a property is sold has minimal bearing on its sale price.
+
+```
+```{r}
+#5b
+# Ensure ggplot2 is installed for visualization
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    install.packages("ggplot2")
+}
+library(ggplot2)
+
+# Assuming the dataset 'data' is already loaded
+# file data path
+data <- read.csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Selecting variables identified for PCA based on correlation analysis
+selected_vars <- c("GarageCars", "TotalRmsAbvGrd", "FullBath", "SalePrice")
+data_selected <- data[, selected_vars, drop = FALSE]
+
+# Check for NA values and handle them if necessary
+data_selected <- na.omit(data_selected)
+
+# Standardizing the data before applying PCA
+data_standardized <- scale(data_selected)
+
+# Performing PCA using the prcomp function
+pca_results <- prcomp(data_standardized, scale. = TRUE)
+
+# Summary of PCA results
+print(summary(pca_results))
+
+# Extracting standard deviation of principal components
+std_dev <- pca_results$sdev
+pr_var <- std_dev^2
+prop_varex <- pr_var/sum(pr_var)
+
+# Creating a Scree plot to visualize the proportion of variance each PC explains
+df <- data.frame(PC = seq_along(prop_varex), Variance = prop_varex)
+ggplot(df, aes(x = PC, y = Variance)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    geom_line(aes(group = 1), color = "red") +
+    labs(title = "Scree Plot", x = "Principal Component", y = "Proportion of Variance Explained") +
+    theme_minimal()
+
+# Creating a biplot using base R
+biplot(pca_results, main = "PCA Biplot")
+
+#Based on the Scree plot and PCA biplot.
+
+#Scree Plot Analysis: The scree plot demonstrates a significant decrease in the amount of variation explained after the first main component. This suggests that PC1 accounts for a considerable amount of the dataset's volatility. The variation explained by the next components (PC2, PC3, etc.) reduces significantly.
+
+#PCA Biplot Analysis: The biplot shows the distribution of the variables and data points onto the first two principal components. It helps us understand how the variables contribute to these components. GarageCars and SalePrice appear to contribute significantly to PC1, indicating that they have a lot of shared variances. TotalRmsAbvGrd and FullBath likewise contribute heavily to PC1 but are somewhat more aligned with PC2, implying that they give some unique information that is not fully captured by PC1.
+
+#GarageCars and SalePrice have a significant correlation and contribute equally to PC1, making either one possibly redundant when used in predictive modeling. Keeping only one of them may be enough to capture the key diversity they represent. TotalRmsAbvGrd and FullBath, although contributing to the major components, share a significant amount of variation with the other variables. Depending on the analysis objectives, they may be combined into a single component or selectively included depending on specific analytical requirements. Given the considerable decline in variance explained post-PC1 as indicated in the scree plot, keeping only the first principal component may be acceptable if a very simple model were looking for. However, retaining the first two components may capture a more complex structure of the data, particularly if TotalRmsAbvGrd and FullBath's contributions to PC2 are regarded as significant.
+```
+
+```{r}
+#5bi
+# Load necessary libraries
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    install.packages("ggplot2")
+}
+library(ggplot2)
+
+# Assuming pca_results are already calculated using prcomp
+# Retain the first two principal components for further analysis
+reduced_data <- pca_results$x[, 1:2]
+
+# Ensure 'DwellClass' is a factor with levels
+data$DwellClass <- factor(data$DwellClass)
+
+# Check if there are valid levels in 'DwellClass'
+if (length(levels(data$DwellClass)) > 0) {
+    # Plot the reduced data
+    plot(reduced_data, main = "Reduced Data Plot", xlab = "PC1", ylab = "PC2", pch = 19, col = as.factor(data$DwellClass))
+    
+    # Adding a legend with levels of the categorical variable
+    legend("topright", legend = levels(data$DwellClass), col = 1:length(levels(data$DwellClass)), pch = 19)
+} else {
+    warning("No valid levels found in 'DwellClass'. Check data consistency.")
+    # Plot without a legend
+    plot(reduced_data, main = "Reduced Data Plot", xlab = "PC1", ylab = "PC2", pch = 19, col = "gray")
+}
+
+```
+```{r}
+#5bii
+# Assuming 'pca_results' has been previously calculated with prcomp
+# Extract the first principal component
+reduced_data <- pca_results$x[, 1]
+
+# Summary of the reduced data (1D representation)
+summary(reduced_data)
+
+# Visualization of the reduced data
+plot(reduced_data, rep(1, length(reduced_data)), main = "Reduced Data Plot (1D)",
+     xlab = "PC1", ylab = "", pch = 19, col = as.factor(data$DwellClass), cex = 0.6)
+axis(1, at = pretty(range(reduced_data)), labels = TRUE)
+if(length(levels(data$DwellClass)) > 0) {
+    legend("topright", legend = levels(data$DwellClass), col = 1:length(levels(data$DwellClass)), pch = 19)
+}
+
+```
+```{r}
+#5c
+# Load necessary libraries
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    install.packages("ggplot2")
+}
+library(ggplot2)
+
+# Plotting GarageCars vs SalePrice
+ggplot(data, aes(x = GarageCars, y = SalePrice)) +
+    geom_point(aes(color = GarageCars), alpha = 0.5) +
+    geom_smooth(method = "lm", color = "blue", se = FALSE) +
+    labs(title = "Garage Cars vs Sale Price", x = "Number of Garage Cars", y = "Sale Price") +
+    theme_minimal()
+
+# Plotting TotalRmsAbvGrd vs SalePrice
+ggplot(data, aes(x = TotalRmsAbvGrd, y = SalePrice)) +
+    geom_point(aes(color = TotalRmsAbvGrd), alpha = 0.5) +
+    geom_smooth(method = "lm", color = "red", se = FALSE) +
+    labs(title = "Total Rooms Above Ground vs Sale Price", x = "Total Rooms Above Ground", y = "Sale Price") +
+    theme_minimal()
+
+# Plotting FullBath vs SalePrice
+ggplot(data, aes(x = FullBath, y = SalePrice)) +
+    geom_point(aes(color = FullBath), alpha = 0.5) +
+    geom_smooth(method = "lm", color = "green", se = FALSE) +
+    labs(title = "Full Baths vs Sale Price", x = "Number of Full Baths", y = "Sale Price") +
+    theme_minimal()
+
+#Based on the plots provided and the data shown from the selected variables versus the goal variable SalePrice, below is an analysis of the observed distributions and their consequences.
+
+#Garage Cars Versus Sale Prices: The plot shows a favorable association between the number of garage cars and the sale price of residences. Homes with extra garage spaces often sell for a greater price. This trend indicates that garage size is a desirable characteristic for homeowners, presumably reflecting both the usefulness and luxury of having additional parking spaces. It indicates that properties with more garage space are either larger or in more attractive locations, both of which contribute to increased property values.
+
+#Total Rooms Above Ground vs. Sales Price: There is a definite positive relationship between the total number of rooms above ground and the sale price. More rooms often mean greater pricing. This association can be ascribed to the greater living space and possible utility that a higher number of rooms offers. Larger homes with more rooms may accommodate more luxuries and larger families, justifying greater pricing. This variable represents a property's adaptability and luxury, as well as its physical size.
+
+#Full Baths vs. Sale Price: The association between a home's number of full baths and its sale price is likewise good. Homes with more full bathrooms often sell for a greater price. Similar to garage vehicles and room count, the number of bathrooms in a home may have a considerable influence on its attractiveness and usefulness, with more bathrooms frequently signaling a property's potential to accommodate bigger family sizes or higher-end amenities. Bathrooms are also costly to install, therefore their quantity may indicate the entire investment in the property's finish and amenities.
+
+#The comparison of these factors to SalePrice indicates their significance in real estate appraisal. Their substantial association with selling price supports their usage in complex analytical models and can help guide investment decisions.
+
+
+```
+```{r}
+#Part C
+
+#1a Building a Regression Model with Selected Variables
+#The selected variables based on earlier analysis (Part B) include:
+
+#GarageCars
+#TotalRmsAbvGrd
+#FullBath
+
+#These variables were identified as influential predictors for the target variable, SalePrice. We will start by building a linear regression model using these variables.
+
+# Load the necessary library
+library(stats)
+
+# Load the dataset
+data <- read.csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Building the initial regression model
+initial_model <- lm(SalePrice ~ GarageCars + TotalRmsAbvGrd + FullBath, data = data)
+summary(initial_model)
+
+
+```
+```{r}
+#1ai. Build a Regression Model with Selected Variables
+
+#With the selected variables based on previous analysis: GarageCars, TotalRmsAbvGrd, and FullBath, with SalePrice as the target variable.
+
+# Load the dataset
+data <- read.csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Build the linear regression model
+model1 <- lm(SalePrice ~ GarageCars + TotalRmsAbvGrd + FullBath, data = data)
+
+# Summary of the model to see coefficients and statistics
+summary(model1)
+
+
+```
+
+```{r}
+#1b. Evaluate the Regression Model and Carry Out Feature Selection
+
+#To improve the model, we can explore other combinations and use feature selection techniques like stepwise selection.
+
+#Here are three models using different selection criteria:
+
+#1 Stepwise Selection (both directions):
+stepModel <- step(model1, direction = "both")
+summary(stepModel)
+
+#2 Adding interaction terms to see if they improve model performance:
+
+model2 <- lm(SalePrice ~ GarageCars * TotalRmsAbvGrd * FullBath, data = data)
+summary(model2)
+
+#3 Using another subset of variables or transformations (e.g., square of rooms to capture nonlinear effects):
+model3 <- lm(SalePrice ~ GarageCars + I(TotalRmsAbvGrd^2) + FullBath, data = data)
+summary(model3)
+
+```
+```{r}
+#1c Compare These Regression Models Based on Evaluation Metrics
+
+#To compare these models, by looking into metrics like R-squared, Adjusted R-squared, AIC, and BIC:
+
+# Comparison of models based on summary statistics
+comparison <- data.frame(
+  Model = c("Model 1", "Stepwise Model", "Model 2", "Model 3"),
+  R_Squared = c(summary(model1)$r.squared, summary(stepModel)$r.squared, summary(model2)$r.squared, summary(model3)$r.squared),
+  Adjusted_R = c(summary(model1)$adj.r.squared, summary(stepModel)$adj.r.squared, summary(model2)$adj.r.squared, summary(model3)$adj.r.squared),
+  AIC = AIC(model1, stepModel, model2, model3),
+  BIC = BIC(model1, stepModel, model2, model3)
+)
+
+# Print the model comparisons
+print(comparison)
+View(comparison)
+```
+
+```{r}
+#2a. Build a Decision Tree with the Selected Variables
+# Load necessary library
+library(rpart)
+
+# Reset plot parameters to default to avoid the "plot region too large" error
+par(mfrow = c(1, 1))  # Reset to single plot layout
+par(mar = c(4, 4, 2, 1) + 0.1)  # Set reasonable margins
+par(omi = c(0.1, 0.1, 0.1, 0.1))  # Set small outer margins
+par(pin = c(6, 4))  # Adjust plot size within the figure region
+
+# Plot the decision tree
+plot(tree_model1, main = "Decision Tree for Sale Price Prediction", cex = 0.5, xpd = NA)
+text(tree_model1, use.n = TRUE, all = TRUE, cex = 0.5, xpd = NA)
+
+# Reset plotting parameters to very default after plotting to avoid affecting other plots
+par(mar = c(5, 4, 4, 2) + 0.1)
+par(omi = c(0, 0, 0, 0))
+par(pin = c(5, 3))  
+
+```
+```{r}
+#2a. Build a Decision Tree with the Selected Variables (adding colors)
+# Load necessary library
+library(rpart)
+
+# Define colors for different levels of the tree
+node_colors <- c("#FF9999", "#99CCFF", "#FFFF99", "#CC99FF")
+box_types <- c("circle", "rectangle", "ellipse", "roundrect")
+
+# Plot the decision tree with enhanced visual settings
+plot(tree_model1, main = "Decision Tree for Sale Price Prediction",
+     uniform = TRUE, branch = 0.6, 
+     model = TRUE, cex = 0.6, 
+     xpd = NA, box.col = node_colors[tree_model1$frame$var],
+     box.type = box_types)
+
+# Add text with adjusted settings
+text(tree_model1, use.n = TRUE, all = TRUE, cex = 0.6,
+     font = 2, xpd = NA, col = "darkblue")
+
+# Reset plot parameters to default
+par(mar = c(5, 4, 4, 2) + 0.1)
+par(omi = c(0, 0, 0, 0))
+
+```
+```{r}
+#2b. Evaluate the Decision Tree Model and Carry Out Pruning
+
+#To build better decision tree models to adjust parameters and prune the tree to avoid overfitting.
+
+#Pruned Tree:
+
+# Pruning the tree
+# Load necessary library
+library(rpart)
+
+#1 Pruning the tree
+ptree <- prune(tree_model1, cp = tree_model1$cptable[which.min(tree_model1$cptable[,"xerror"]),"CP"])
+
+# Plot the pruned tree with adjusted parameters
+plot(ptree, main = "Pruned Decision Tree", uniform = TRUE, cex = 0.5, xpd = NA)
+text(ptree, use.n = TRUE, all = TRUE, cex = 0.5, xpd = NA)
+
+#2 Tree with Different Complexity Parameters
+# Build and plot a decision tree with specified complexity parameter (cp)
+tree_model2 <- rpart(SalePrice ~ GarageCars + TotalRmsAbvGrd + FullBath, data = data, method = "anova", cp = 0.01)
+plot(tree_model2, main = "Decision Tree with cp = 0.01", cex = 0.5, xpd = NA)
+text(tree_model2, use.n = TRUE, all = TRUE, cex = 0.5, xpd = NA)
+
+#3 Tree Using Different Minbucket Sizes
+# Build and plot a decision tree with a specified minimum bucket size
+tree_model3 <- rpart(SalePrice ~ GarageCars + TotalRmsAbvGrd + FullBath, data = data, method = "anova", minbucket = 10)
+plot(tree_model3, main = "Decision Tree with minbucket = 10", cex = 0.5, xpd = NA)
+text(tree_model3, use.n = TRUE, all = TRUE, cex = 0.5, xpd = NA)
+
+```
+```{r}
+#2c Compare these decision tree models
+
+# Load necessary library
+library(rpart)
+
+# Summarizing each model to get insights into tree complexities and node statistics
+summary_model1 <- summary(tree_model1)
+summary_ptree <- summary(ptree)
+summary_model2 <- summary(tree_model2)
+summary_model3 <- summary(tree_model3)
+
+# Assuming 'validation_data' is available for prediction error calculation
+# Predict outcomes using the validation set for each model
+pred1 <- predict(tree_model1, newdata = validation_data, type = "vector")
+pred2 <- predict(ptree, newdata = validation_data, type = "vector")
+pred3 <- predict(tree_model2, newdata = validation_data, type = "vector")
+pred4 <- predict(tree_model3, newdata = validation_data, type = "vector")
+
+# Calculate RMSE for each model to compare performance
+rmse1 <- sqrt(mean((validation_data$SalePrice - pred1)^2))
+rmse2 <- sqrt(mean((validation_data$SalePrice - pred2)^2))
+rmse3 <- sqrt(mean((validation_data$SalePrice - pred3)^2))
+rmse4 <- sqrt(mean((validation_data$SalePrice - pred4)^2))
+
+# Creating a comparison table to display RMSEs for each model
+comparison_table <- data.frame(Model = c("Original Tree", "Pruned Tree", "Tree with CP=0.01", "Tree with minbucket=10"),
+                               RMSE = c(rmse1, rmse2, rmse3, rmse4))
+
+# Print the comparison table
+print(comparison_table)
+
+# Optionally, print summaries for detailed inspection
+print(summary_model1)
+print(summary_ptree)
+print(summary_model2)
+print(summary_model3)
+
+#The decision tree models show how changing parameters impacts the model's complexity and ability to forecast selling prices based on different properties. Here's an overview of the models and their evaluation:
+
+#1. Original Tree: The complexity is great owing to the increased splits and deeper tree structure. With lower owing to its complexity, making it more difficult to monitor choice pathways. The performance may be overfitting, as seen by the detailed splits, perhaps collecting noise rather than the actual relationship.
+
+#2. Pruned Tree: decreased complexity by removing unnecessary splits that do not add significantly to predictive accuracy. Interpretability is improved since the trimmed tree is easier to grasp and follow. Because of the reduction in overfitting, generalization on previously unknown data is likely to be improved.
+
+#3. RMSE vs. Complexity Parameter Plot: This graph shows how the Root Mean Square Error (RMSE) varies with different complexity parameters. A rapid fall or rise in RMSE as complexity changes might suggest the model's susceptibility to overfitting or underfitting. The lowest point on the RMSE figure represents optimal CP, which is the complexity value that achieves the optimum balance of underfitting and overfitting.
+
+#The choice to prune a tree or change its parameters should be based on a balance of complexity (which might lead to overfitting) and simplicity (which may underfit the data). The visualizations and RMSE ratings give a clear indication to how each model performs in these areas, assisting in determining the best successful model for predicting home prices.
+
+
+```
+```{r}
+# Install and load necessary packages
+if (!require(rpart)) install.packages("rpart")
+library(rpart)
+
+# Load the dataset
+data <- read.csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Calculate the number of rows to include in the training set (80% of the dataset)
+training_size <- floor(0.8 * nrow(data))
+
+# Create a randomized row index to shuffle the dataset
+index <- sample(seq_len(nrow(data)), size = training_size)
+
+# Split the data into training and validation sets
+training_data <- data[index, ]
+validation_data <- data[-index, ]
+
+# Train the decision tree model on the training data
+tree_model1 <- rpart(SalePrice ~ ., data = training_data, method = "anova")
+
+# Prune the tree based on complexity parameter
+ptree <- prune(tree_model1, cp = tree_model1$cptable[which.min(tree_model1$cptable[,"xerror"]),"CP"])
+
+# Predict outcomes using the validation set for the original and pruned tree
+pred1 <- predict(tree_model1, newdata = validation_data)
+pred2 <- predict(ptree, newdata = validation_data)
+
+# Calculate RMSE for each model to compare performance
+rmse1 <- sqrt(mean((validation_data$SalePrice - pred1)^2))
+rmse2 <- sqrt(mean((validation_data$SalePrice - pred2)^2))
+
+# Creating a comparison table to display RMSEs for each model
+comparison_table <- data.frame(Model = c("Original Tree", "Pruned Tree"),
+                               RMSE = c(rmse1, rmse2))
+
+# Print the comparison table
+print(comparison_table)
+
+
+
+```
+```{r}
+#2c Compare these decision tree models
+
+# Load necessary library
+if (!require(rpart)) install.packages("rpart")
+library(rpart)
+
+# Load the dataset
+data <- read.csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Split data into training and validation sets
+set.seed(123)
+training_size <- floor(0.8 * nrow(data))
+index <- sample(seq_len(nrow(data)), size = training_size)
+training_data <- data[index, ]
+validation_data <- data[-index, ]
+
+# Train decision tree model
+tree_model1 <- rpart(SalePrice ~ ., data = training_data, method = "anova")
+
+# Pruning the tree based on the complexity parameter
+ptree <- prune(tree_model1, cp = tree_model1$cptable[which.min(tree_model1$cptable[,"xerror"]),"CP"])
+
+# Plotting the original and pruned trees
+par(mfrow = c(1, 2), mar = c(1, 1, 1, 1))  # Adjust plot margins
+
+# Plot Original Tree
+plot(tree_model1, main = "Original Tree", uniform = TRUE)
+text(tree_model1, use.n = TRUE, cex = 0.6)
+
+# Plot Pruned Tree
+plot(ptree, main = "Pruned Tree", uniform = TRUE)
+text(ptree, use.n = TRUE, cex = 0.6)
+
+```
+```{r}
+#2c Compare these decision tree models
+# Load necessary library
+if (!require(rpart)) install.packages("rpart")
+library(rpart)
+
+# Load the dataset
+data <- read.csv("C:/Users/ijriv/OneDrive/Documents/Semester 2/BUS5PA - Predictive Analytics/Assessment 1/HousingValuation.csv")
+
+# Split data into training and validation sets
+set.seed(123)
+training_size <- floor(0.8 * nrow(data))
+index <- sample(seq_len(nrow(data)), size = training_size)
+training_data <- data[index, ]
+validation_data <- data[-index, ]
+
+# Train decision tree model
+tree_model1 <- rpart(SalePrice ~ ., data = training_data, method = "anova")
+
+# Exploring RMSE across different complexity parameters
+cp_values <- seq(0.01, 0.1, by = 0.01)
+rmse_values <- sapply(cp_values, function(cp) {
+    ptree_temp <- prune(tree_model1, cp = cp)
+    pred_temp <- predict(ptree_temp, newdata = validation_data)
+    sqrt(mean((validation_data$SalePrice - pred_temp)^2))
+})
+
+# Plotting RMSE across different cp values
+plot(cp_values, rmse_values, type = "b", xlab = "Complexity Parameter (cp)", ylab = "RMSE",
+     main = "RMSE vs. Complexity Parameter", pch = 19, col = "blue", lwd = 2, cex = 1.2,
+     cex.main = 1.5, cex.lab = 1.2, cex.axis = 1.1, xlim = c(0, 0.1), ylim = range(rmse_values))
+
+# Adding a grid for better readability
+grid(nx = NULL, ny = NULL, col = "gray", lty = "dotted", lwd = par("lwd"))
+
+```
+
+
+
+
+
+
