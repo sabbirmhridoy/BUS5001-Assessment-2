@@ -1,4 +1,5 @@
 Housing Valuation Analysis
+
 Project Overview
 This project aims to analyze housing valuation data to identify key factors that impact property prices. The analysis is conducted using R and includes data processing, visualization, and modeling to provide insights into the housing market.
 
