@@ -10,6 +10,7 @@ Files Description:
 2. HousingValuation.csv: Dataset containing the housing data used in the analysis.
 3. .RData: R data file that stores workspace variables.
 4. .Rhistory: File containing the history of commands executed in R.
+5. 5.BUS5PA_Topic 5- Predictive Modelling with K-Nearest Neighbours and Neural Networks: Pdf file containing the topic 5 content.
 
 Technologies Used
 
